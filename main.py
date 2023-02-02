@@ -1,23 +1,6 @@
 from boto3.dynamodb.conditions import Attr
-import json
 from collections import OrderedDict
-from decimal import *
-from db_tables import *
-
-
-class DecimalEncoder(json.JSONEncoder):
-
-    def default(self, obj):
-        """
-            changing decimal to integer
-        """
-        # if passed in object is instance of Decimal
-        # convert it to a string
-        if isinstance(obj, Decimal):
-            # if float(obj) % 1 == 0:
-            #     return int(obj)
-            return int(obj)
-        return json.JSONEncoder.default(self, obj)
+from constant import *
 
 
 def workspace_id_with_maximum_studies_published_data():
