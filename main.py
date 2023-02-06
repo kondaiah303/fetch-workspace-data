@@ -7,12 +7,12 @@ def workspace_id_with_maximum_studies_published_data():
     """
         printing workspace_id which published maximum studies
     """
-
-    print('Retrieving the data')
-    res = DynamodbTables().study_details_table.scan(
+    res = DynamodbTables.study_details_table.scan(
         FilterExpression=Attr('status').eq('ACTIVE') | Attr('status').eq('CLOSED')
     )
     workspace_id_list1 = []
+    workspace_id_count = {}
+    workspace_id = ''
     while "LastEvaluatedKey" in res:
         key = res['LastEvaluatedKey']
         res = DynamodbTables().study_details_table.scan(
@@ -20,51 +20,46 @@ def workspace_id_with_maximum_studies_published_data():
         )
         for item in res['Items']:
             workspace_id_list1.append(item.get('workspace_id'))
-    workspace_id_list2 = list(OrderedDict.fromkeys(workspace_id_list1))
-    workspace_id_count = {workspace_id: workspace_id_list1.count(workspace_id) for workspace_id in workspace_id_list2}
-    count = 0
-    workspace_id = ''
+            workspace_id_count[(item.get('workspace_id'))] = workspace_id_list1.count(item.get('workspace_id'))
+    maximum = max(workspace_id_count.values())
     for key, value in workspace_id_count.items():
-        if count < value:
-            count = value
+        if value == maximum:
             workspace_id = key
-    print('maximum studies published = ', {workspace_id: count})
+    print('maximum studies published = ', {workspace_id: maximum})
 
 
 def study_with_maximum_tester_responses():
     """
         printing study_id which having maximum tester responses
     """
-
-    res = DynamodbTables().tester_details_table.scan(
+    res = DynamodbTables.tester_details_table.scan(
         FilterExpression=Attr('test_status').eq('FINISHED')
     )
     study_id_list1 = []
+    study_id_count = {}
     while "LastEvaluatedKey" in res:
         key = res['LastEvaluatedKey']
-        res = DynamodbTables().tester_details_table.scan(
+        res = DynamodbTables.tester_details_table.scan(
             FilterExpression=Attr('test_status').eq('FINISHED'), ExclusiveStartKey=key
         )
         for item in res['Items']:
             study_id_list1.append(item.get('study_id'))
-    study_id_list2 = list(OrderedDict.fromkeys(study_id_list1))
-    study_id_count = {study_id: study_id_list1.count(study_id) for study_id in study_id_list2}
-    count = 0
+            study_id_count[item.get('study_id')] = study_id_list1.count(item.get('study_id'))
+    maximum = max(study_id_count.values())
     study_id = ''
     for key, value in study_id_count.items():
-        if count < value:
-            count = value
+        if value == maximum:
             study_id = key
-    print('study with maximum tester responses = ', {study_id: count})
+    print('study with maximum tester responses = ', {study_id: maximum})
 
 
 def more_tester_count_for_most_active_workspace_id_data():
-    res1 = DynamodbTables().study_details_table.scan()
+    res1 = DynamodbTables.study_details_table.scan()
     study_details_data_list1 = []
     workspace_id_and_tester_count_list = []
     while 'LastEvaluatedKey' in res1:
         key = res1['LastEvaluatedKey']
-        res1 = DynamodbTables().study_details_table.scan(ExclusiveStartKey=key)
+        res1 = DynamodbTables.study_details_table.scan(ExclusiveStartKey=key)
         items = res1['Items']
         for item in items:
             if item.get('tester_counts') is not None:
@@ -82,21 +77,22 @@ def more_tester_count_for_most_active_workspace_id_data():
 
 
 def more_studies_created():
-    res2 = DynamodbTables().study_details_table.scan(
+    res2 = DynamodbTables.study_details_table.scan(
         FilterExpression=Attr('status').eq('ACTIVE') | Attr('status').eq('CLOSED') | Attr('status').eq('DRAFT')
     )
     workspace_id_list = []
     study_details_data_list2 = []
+    study_id_count_dict = {}
     while "LastEvaluatedKey" in res2:
         key = res2['LastEvaluatedKey']
-        res2 = DynamodbTables().study_details_table.scan(
+        res2 = DynamodbTables.study_details_table.scan(
             FilterExpression=Attr('status').eq('ACTIVE') | Attr('status').eq('CLOSED') | Attr('status').eq('DRAFT'),
             ExclusiveStartKey=key)
         items = res2['Items']
         for item in items:
             study_details_data_list2.append(item)
             workspace_id_list.append(item.get('workspace_id'))
-
+            # study_id_count_dict[item.get('study_id')] = workspace_id_list.count(item.get('workspace_id'))
     study_id_count_dict = {study_id: workspace_id_list.count(study_id) for study_id in workspace_id_list}
     return study_id_count_dict
 
